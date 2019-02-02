@@ -2,6 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 16
 __lua__
 
+_version = 0.3
 actors = {} -- all active actors
 presents = {} -- all active presents
 grass_pattern = {} -- randomized grass pattern
@@ -16,6 +17,15 @@ playing = false -- is in active game or not
 scroll_timer = 0
 global_timer = 0
 
+function analog_x()
+-- returns values from -50 to 50 for mobile "analog stick control"
+-- -50 stick is all the way left
+-- 50 stick is all the way right 
+    if(peek(0x5f81)==0) then return 0 
+    else
+        return peek(0x5f81) - 100 
+    end
+end
 
 function make_actor(start_x)
     local a = {}
@@ -104,17 +114,17 @@ end
 function move_player(actor)
     local btn_pressed = false
     local ddx = 0
-    if (btn(0)) then
+    if (btn(0)) or analog_x() < 0 then
         actor.start_spr = 3
         actor.cur_frame += 0.3
-        ddx -= 0.25
+        ddx -= 0.25 - (analog_x() / 500)
         btn_pressed = true
     end
 
-    if (btn(1)) then
+    if (btn(1)) or analog_x() > 0 then
          actor.start_spr = 1
         actor.cur_frame += 0.3
-        ddx += 0.25
+        ddx += 0.25 + (analog_x() / 500)
         btn_pressed = true
     end
 
@@ -369,8 +379,9 @@ function _draw()
             rectfill(0,0,128,128,12)
             map(2, 18, 50,40, 5, 5)
             print("marina's birthday adventure", 10, 10, 3)
-            print("press x to start", 35, 110, 3)
             print("use arrow keys to move around. use x to jump. music by gruber99.bandcamp.com", 128-scroll_timer, 22, 3)
+            print("press x to start", 35, 110, 3)
+            print("version: ".._version, 79, 120)
             scroll_timer += 1
             if scroll_timer > 500 then scroll_timer = 0 end
         end
